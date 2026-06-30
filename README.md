@@ -19,6 +19,63 @@ Instead of sending raw codebase files, our Python-based `ASTAnalyzer` determinis
 
 ## 🏗️ System Architecture
 
+```mermaid
+graph TD
+    subgraph IDE [IDE Interception Layer]
+        ext[VS Code Extension]
+        event_save[onDidSave File]
+        event_tab[Change Active Tab]
+        event_task[Set Active Task]
+        
+        ext --> event_save
+        ext --> event_tab
+        ext --> event_task
+    end
+
+    subgraph DB [AISP State Database]
+        diffs[(workspace/diffs/)]
+        editor_state[(state/editor.json)]
+        task_graph[(tasks/graph.json)]
+    end
+
+    subgraph Core [Python Local Daemon Engine]
+        snapshot[Snapshot Engine]
+        manager[Session Manager]
+        ast[AST Analyzer]
+        resume[Resume Engine]
+        
+        event_save -->|Spawns IPC| snapshot
+        event_tab -->|Spawns IPC| manager
+        event_task -->|Spawns IPC| manager
+        
+        snapshot -->|Incremental Backup| diffs
+        manager -->|Update Cursor/Tab| editor_state
+        manager -->|Update Objective| task_graph
+    end
+
+    subgraph Export [Extraction Engine]
+        opt1[🧠 Zero-Bloat AST Export]
+        opt2[💻 Full Code Export]
+        opt3[📦 ZIP Binary Export]
+        
+        resume -->|Reads| diffs
+        resume -->|Reads| editor_state
+        resume -->|Reads| task_graph
+        resume <-->|Distills| ast
+        
+        resume --> opt1
+        resume --> opt2
+        resume --> opt3
+    end
+
+    subgraph AI [Target LLMs]
+        claude[Claude.ai / ChatGPT]
+        
+        opt1 -.->|Pasted by User| claude
+        opt2 -.->|Pasted by User| claude
+    end
+```
+
 The MemoryBridge system is completely modular and decoupled, consisting of three main layers:
 
 ### 1. The IDE Interception Layer (TypeScript / Node.js)
