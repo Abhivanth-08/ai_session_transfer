@@ -1,0 +1,39 @@
+{
+  "name": "aisp-vscode",
+  "displayName": "MemoryBridge AISP",
+  "description": "AI Session Protocol (AISP) Extension for seamless AI handoffs.",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aisp.initSession",
+        "title": "AISP: Initialize AI Session"
+      },
+      {
+        "command": "aisp.generateResume",
+        "title": "AISP: Generate Resume Prompt"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "18.x",
+    "typescript": "^5.1.3"
+  }
+}

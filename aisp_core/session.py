@@ -100,6 +100,12 @@ if __name__ == "__main__":
             print(f"Session initialized successfully in {workspace_dir}")
         except FileExistsError:
             print("AISP Session already exists.")
+    elif len(sys.argv) > 3 and sys.argv[1] == "task":
+        workspace_dir = sys.argv[2]
+        task_desc = sys.argv[3]
+        manager = AISessionManager(workspace_dir)
+        manager.update_task(task_desc)
+        print(f"Task updated successfully to: {task_desc}")
 
 # Example Usage:
 # if __name__ == "__main__":

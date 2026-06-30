@@ -34,7 +34,7 @@ class ResumeEngine:
         relevant_files = current_task.get("relevant_files", []) if current_task else []
         
         active_file = state.get("active_file", "None")
-        cursor = state.get("cursor_position", {})
+        cursor = state.get("cursor_position") or {}
         cursor_line = cursor.get("line", "Unknown")
         
         prompt = f"""# AISP Resume Context (MemoryBridge)
@@ -55,6 +55,29 @@ class ResumeEngine:
 ---
 *INSTRUCTION FOR AI: You have been restored into this session. Please analyze the 'Current Objective' and the 'Active File', and continue the implementation seamlessly. Do not regenerate existing codebase scaffolding.*
 """
+        return prompt
+
+    def generate_zero_bloat_prompt(self) -> str:
+        """
+        The ultimate unique feature: Extracts exact AST structure to provide 
+        perfect architectural context with 90% fewer tokens than raw code.
+        """
+        try:
+            from .ast_analyzer import TokenOptimizedDistiller
+        except ImportError:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+            from ast_analyzer import TokenOptimizedDistiller
+        
+        # Start with the standard task/cursor state
+        prompt = self.generate_resume_prompt()
+        
+        # Append the AST structure instead of raw code
+        distiller = TokenOptimizedDistiller(str(self.workspace_path))
+        ast_skeleton = distiller.generate_project_skeleton()
+        
+        prompt += f"\n\n{ast_skeleton}"
         return prompt
 
     def generate_full_code_prompt(self) -> str:
@@ -90,6 +113,11 @@ class ResumeEngine:
 
 if __name__ == "__main__":
     import sys
+    import io
+    # Force UTF-8 encoding for Windows standard output to support emojis
+    if sys.stdout.encoding.lower() != 'utf-8':
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        
     mode = sys.argv[1] if len(sys.argv) > 1 else "basic"
     workspace = sys.argv[2] if len(sys.argv) > 2 else "."
     
@@ -97,6 +125,8 @@ if __name__ == "__main__":
     
     if mode == "basic":
         print(engine.generate_resume_prompt())
+    elif mode == "ast":
+        print(engine.generate_zero_bloat_prompt())
     elif mode == "full":
         print(engine.generate_full_code_prompt())
     elif mode == "zip":
